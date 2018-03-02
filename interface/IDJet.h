@@ -36,6 +36,13 @@ class IDJet : public Jet, public MCMatchable
 			metcorr += TVector2((sf-1.)*Px(), (sf-1.)*Py());
 			SetPxPyPzE(sf*Px(), sf*Py(), sf*Pz(), sf*E());
 		}
+		void ApplySF(size_t sftype)
+		{
+			if(m_sftype == sftype) return;
+			double sf = m_sf[sftype]/m_sf[m_sftype];
+			m_sftype = sftype;
+			SetPxPyPzE(sf*Px(), sf*Py(), sf*Pz(), sf*E());
+		}
 	double genpt = 0.;
 	IDJet(const Jet el):
 		Jet(el),

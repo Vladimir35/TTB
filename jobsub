@@ -43,7 +43,17 @@ exe = p.stdout.read().split('\n')[0]
 cpcomm = 'cp ' + exe + ' ' + jobdir
 os.system(cpcomm)
 exe = os.path.join(jobdir, os.path.basename(exe))
-print exe, execonfig
+#print exe, execonfig
+
+p = subprocess.Popen(['ldd', exe], stdout=subprocess.PIPE)
+slibs = p.stdout.read().split('\n')
+slibs = [(l.split('=>')[-1].split('(')[0]).strip() for l in slibs if 'uscms' in l]
+libs = []
+for lib in slibs:
+    cpcomm = 'cp ' + lib + ' ' + jobdir
+    os.system(cpcomm)
+    libs.append(os.path.join(jobdir, os.path.basename(lib)))
+
 
 files = os.listdir(inputdir)
 
@@ -57,22 +67,27 @@ if os.path.isdir(transferdir):
 transferfiles = [os.path.join(transferdir, tf) for tf in transferfiles]
 transferfiles.append(execonfig)
 
+transferfiles += libs
+transferfiles += [exe]
+transferfiles += [execonfig]
+
 transferfiles_config = ', '.join(transferfiles)
+print transferfiles_config
 
 for sf in samplefiles:
 	if 'QCD' in sf or 'DYJet' in sf or 'WJet' in sf:
-		filesperjob = 60
+		filesperjob = 160
 	elif 'DATA' in sf:
-		filesperjob = 80
+		filesperjob = 200
 	elif 'Hpp' in sf:
-		filesperjob = 15
+		filesperjob = 40
 	elif 'tt_' in sf:
 		if configs['PDFTEST'] == '1' and 'tt_PowhegP8' in sf:
-			filesperjob = 8
+			filesperjob = 20
 		else:
-			filesperjob = 15
+			filesperjob = 20
 	else:
-		filesperjob = 20
+		filesperjob = 60
 
 	#infile = os.path.join(inputdir, sf)
 	jobpath = os.path.join(jobdir, sf.split('.txt')[0])
@@ -97,7 +112,7 @@ Error = con_{2}.stderr
 Arguments = {0} {1} {6}_out_{2}.root --thread 1 --j {2} --J {3} {4}
 Queue
 
-		""".format(exe, infile, j, numjobs, ' '.join(jobargs), transferfiles_config, sample)
+		""".format(os.path.basename(exe), os.path.basename(infile), j, numjobs, ' '.join(jobargs), transferfiles_config+', '+infile, sample)
         
 		conf = open(os.path.join(jobpath, 'condor_'+str(j)+'.jdl'), 'w')
 		conf.write(condorfile)
@@ -107,15 +122,24 @@ Queue
 WORKINGDIR=$PWD
 echo $HOSTNAME
 echo $WORKINGDIR
-ls -lht {0}
-cd {0}
-source environment.sh
+EXE=$1
+ls -lht
+
+export SCRAM_ARCH={0}
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+which scram
+scram p CMSSW {1}
+cd {1}
+eval `scramv1 runtime -sh`
 cd $WORKINGDIR
+
+export LD_LIBRARY_PATH={2}:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH
+echo $LD_LIBRARY_PATH
+ldd $EXE
 
 PA=$@
 PA=${{PA#* }}
-
-EXE=$1
 
 pwd
 ls -lht
@@ -123,14 +147,16 @@ ls -lht
 echo $EXE
 echo $PA
 
-$EXE $PA 
+./$EXE $PA 
 
-	""".format(swdir)
+	""".format(os.environ['SCRAM_ARCH'], os.environ['CMSSW_VERSION'], os.environ['LD_LIBRARY_PATH'])
 
 	conf = open(os.path.join(jobpath, 'batch_job.sh'), 'w')
 	conf.write(batch_job)
 	conf.close()
         
 	for j in range(0, numjobs):
-		os.system('cd ' + jobpath + ' && condor_submit condor_'+str(j)+'.jdl')
+		subcommand = 'cd ' + jobpath + ' && condor_submit condor_'+str(j)+'.jdl'
+#		print subcommand
+		os.system(subcommand)
 

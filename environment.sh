@@ -28,4 +28,8 @@ then
   export LD_LIBRARY_PATH=/cvmfs/cms.cern.ch/$SCRAM_ARCH/external/lhapdf/6.1.6/lib:$LD_LIBRARY_PATH
 fi
 
+export ENV_SOURCED="yes"
+
+export LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH
+
 #export LHAPDF_DATA_PATH=/cvmfs/cms.cern.ch/slc6_amd64_gcc481/external/lhapdf6/6.1.5/share/LHAPDF

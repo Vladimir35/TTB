@@ -1,11 +1,12 @@
-#ifndef TTBARAN_H
-#define TTBARAN_H
+#ifndef TTBARANDILEP_H
+#define TTBARANDILEP_H
 #include <iostream>
 #include <list>
 #include <set>
 #include "AnalyzerBase.h"
 #include "URStreamer.h"
 #include "URDriver.h"
+#include "helper.h"
 #include "IDMuon.h"
 #include "IDElectron.h"
 #include "IDJet.h"
@@ -22,6 +23,10 @@
 #include "JetScaler.h"
 #include "BTagWeight.h"
 #include "BHadronDecayWeights.h"
+#include "Dilepton.h"
+#include "DilepPlots.h"
+#include "DiNeutrinoSolver.h"
+#include <sys/types.h>
 
 #include <TGraphErrors.h>
 
@@ -32,11 +37,14 @@ class ttbar : public AnalyzerBase
 {
 	friend class TTBarGenPlots;
     friend class TTBarPlots;
+    friend class Dilepton;
     friend class TTBarResponse;
     friend class BTagWeight;
     friend class JetScaler;
 
 	private:
+
+
 		int isDA = 0;
 		map<int, set<int> >  runinfo;
 		PDFuncertainty* pdfunc;
@@ -44,8 +52,10 @@ class ttbar : public AnalyzerBase
 		//Gen:
 		bool FULLHAD;
 		bool SEMILEP;
-		bool FULLLEP;
+		bool DILEP;
+		bool DILEPACC;
 		bool SEMILEPACC;
+		bool FULLLEP;
 		GenObject gps[8];
 		GenObject rivetobjs[8];
 		list<GenObject> sgenparticles;
@@ -70,10 +80,63 @@ class ttbar : public AnalyzerBase
 		Permutation rightper;
 		Permutation testper;
 		Permutation bestper;
+		//Evan's stuff
+		Dilepton gendilep;
+		Dilepton idealdilep;
+		Dilepton recodilep;
+		Dilepton recodilep_bswap;
+		Dilepton gen_bl_dilep;
+		Dilepton* rightbdilep;
+		Dilepton* swappedbdilep;
+		Dilepton rightbdilep_ave;
+		Dilepton rightbdilep_smear1;
+		Dilepton rightbdilep_smear2;
+		Dilepton rightbdilep_smear3;
+		Dilepton swappedbdilep_smear;
+
+
+		bool ee;
+		bool mumu;
+		bool emu;
+		bool RECOISDILEP;
+		TLorentzVector* lt;
+		TLorentzVector* ltbar;
+		IDJet* ltjet;
+		IDJet* ltbarjet;
+
+
+		double MW;
+		double Mt;
+		int dilepton_event_counter;
+		int neutrino_graphs;
+		int neutrino_bins;
+		double twopi = 6.2832;
+		double neutrino_step;;
+		int testcounter;
+
+		int event_detail_counter;
+		int DILEP_count;
+		int DILEPACC_count;
+		int detailed_events;
+		int smeargraphs;
+
+
+		int ltpdgid=0;
+		int ltbarpdgid=0;
+		vector<IDJet*> recobjets;
+		vector<IDJet*> addjets;
+		vector<TLorentzVector*> recoleps= {nullptr,nullptr};
+		vector<int> bjetmatch = {0,0};
+		//{b0-lep0, }
+		vector<double> blep_deltar = {0,0,0,0};
+		vector<double> brecogen_deltar = {0,0,0,0};
+
 
 		//reco
 		list<IDJet> sjets;
 		vector<IDJet*> cleanedjets;
+
+
 		list<IDMuon> smuons;
 		vector<IDMuon*> loosemuons;
 		vector<IDMuon*> tightmuons;
@@ -91,6 +154,9 @@ class ttbar : public AnalyzerBase
 		TH2DCollection reco2d;
 		TH1DCollection truth1d;
 		TH2DCollection truth2d;
+		TH2DCollection nugraphs;
+		TH1DCollection ditruth1d;
+		TH2DCollection ditruth2d;
 
         TTBarGenPlots ttp_genall;
         TTBarGenPlots ttp_genacc;
@@ -113,6 +179,19 @@ class ttbar : public AnalyzerBase
 	//	TTBarPlots ttp_blep_wrong;
 		//TTBarPlots ttp_whad_right;
 		//TTBarPlots ttp_whad_wrong;
+
+		DilepPlots right_bjets;
+		DilepPlots right_bjets_ave;
+		DilepPlots right_bjets_lop;
+//		DilepPlots right_bjets_smear1;
+		DilepPlots right_bjets_smear2;
+//		DilepPlots right_bjets_smear3;
+		DilepPlots swapped_bjets;
+		DilepPlots gen_test;
+		DilepPlots gen_MET;
+		DilepPlots nu_MET;
+		DilepPlots gen_bl;
+	//	DilepPlots wrongbjets;
 
 		TTBarPlots ttp_tlepthad_right;
 		TTBarPlots ttp_tlep_right;
@@ -203,7 +282,7 @@ class ttbar : public AnalyzerBase
 		bool TUNEDOWN;
 		//
 		double jetptmin;
-	
+
 		int lastlumi = -1;
 		double weight;
 		double mcweight;
@@ -237,6 +316,9 @@ class ttbar : public AnalyzerBase
 		TH2D* elsfhist;
 		TH2D* mutrgsfhist;
 		TH2D* eltrgsfhist;
+		vector<TH2D*> HAThists;
+
+		vector<double> HATweights;
 
 		bool STUDENT = false;
 		TFile* stud_tf = nullptr;
@@ -274,7 +356,8 @@ class ttbar : public AnalyzerBase
 		void ttanalysis(URStreamer& event);
 		void reconstruction();
 		double lepeffweight(TLorentzVector* lep, URStreamer& event);
-
+		double HATHORweight(Dilepton& gendi, size_t yuk);
+		Long64_t mem_usage();
 		static void setOptions() {}
 };
 

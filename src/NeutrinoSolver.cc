@@ -6,14 +6,14 @@ TMatrixD NeutrinoSolver::RotationX(double a)
 	double ca = Cos(a);
 	double sa = Sin(a);
 	TMatrixD D(3, 3);
-	D(0, 0) = 1.; 
-	D(1, 0) = 0.; 
-	D(2, 0) = 0.; 
-	D(0, 1) = 0.; 
-	D(1, 1) = ca; 
-	D(2, 1) = sa; 
-	D(0, 2) = 0.; 
-	D(1, 2) = -sa; 
+	D(0, 0) = 1.;
+	D(1, 0) = 0.;
+	D(2, 0) = 0.;
+	D(0, 1) = 0.;
+	D(1, 1) = ca;
+	D(2, 1) = sa;
+	D(0, 2) = 0.;
+	D(1, 2) = -sa;
 	D(2, 2) = ca;
 	return(D);
 }
@@ -23,14 +23,14 @@ TMatrixD NeutrinoSolver::RotationY(double a)
 	double ca = Cos(a);
 	double sa = Sin(a);
 	TMatrixD D(3, 3);
-	D(0, 0) = ca; 
-	D(1, 0) = 0.; 
-	D(2, 0) = -sa; 
-	D(0, 1) = 0.; 
-	D(1, 1) = 1.; 
-	D(2, 1) = 0.; 
-	D(0, 2) = sa; 
-	D(1, 2) = 0.; 
+	D(0, 0) = ca;
+	D(1, 0) = 0.;
+	D(2, 0) = -sa;
+	D(0, 1) = 0.;
+	D(1, 1) = 1.;
+	D(2, 1) = 0.;
+	D(0, 2) = sa;
+	D(1, 2) = 0.;
 	D(2, 2) = ca;
 	return(D);
 }
@@ -40,24 +40,29 @@ TMatrixD NeutrinoSolver::RotationZ(double a)
 	double ca = Cos(a);
 	double sa = Sin(a);
 	TMatrixD D(3, 3);
-	D(0, 0) = ca; 
-	D(1, 0) = sa; 
-	D(2, 0) = 0.; 
-	D(0, 1) = -sa; 
-	D(1, 1) = ca; 
-	D(2, 1) = 0.; 
-	D(0, 2) = 0; 
-	D(1, 2) = 0.; 
+	D(0, 0) = ca;
+	D(1, 0) = sa;
+	D(2, 0) = 0.;
+	D(0, 1) = -sa;
+	D(1, 1) = ca;
+	D(2, 1) = 0.;
+	D(0, 2) = 0;
+	D(1, 2) = 0.;
 	D(2, 2) = 1.;
 	return(D);
 }
 
-NeutrinoSolver::NeutrinoSolver(const TLorentzVector* lep, const TLorentzVector* bjet, double MW, double MT) : ERROR(false), H(3, 3), T(3,1), MET(2, 1), VM(2, 2)
+
+//ERROR(false), H_(3, 3), Hp_(3,3), T(3,1), MET(2, 1), VM(2, 2) {;}
+
+void NeutrinoSolver::Build(const TLorentzVector* lep, const TLorentzVector* bjet, double MW, double MT)
 {
+	ERROR = false;
 	Mt = MT;
 	Mw = MW;
 	Ml = lep->M();
 	Mb = bjet->M();
+	IM_ = (*lep+*bjet).M();
 	Mn = 0.;
 	TVector3 l(lep->Vect());
 	TVector3 b(bjet->Vect());
@@ -87,7 +92,6 @@ NeutrinoSolver::NeutrinoSolver(const TLorentzVector* lep, const TLorentzVector* 
 
 	double OmegaS = omega*omega - gammali*gammali;
 	double Omega = Sqrt(OmegaS);
-
 	double x1 = Sx - (Sx + omega*Sy)/OmegaS;
 	double y1 = Sy - (Sx + omega*Sy)*omega/OmegaS;
 	double ZS = x1*x1*OmegaS - (Sy - omega*Sx)*(Sy - omega*Sx) - Mw*Mw + x0*x0 + epsilon*epsilon;
@@ -108,14 +112,14 @@ NeutrinoSolver::NeutrinoSolver(const TLorentzVector* lep, const TLorentzVector* 
 	double Z = Sqrt(ZS);
 
 	TMatrixD Ht(3, 3);
-	Ht(0, 0) = Z/Omega; 
-	Ht(1, 0) = Z*omega/Omega; 
-	Ht(2, 0) = 0.; 
-	Ht(0, 1) = 0.; 
-	Ht(1, 1) = 0.; 
-	Ht(2, 1) = Z; 
-	Ht(0, 2) = x1-pl; 
-	Ht(1, 2) = y1; 
+	Ht(0, 0) = Z/Omega;
+	Ht(1, 0) = Z*omega/Omega;
+	Ht(2, 0) = 0.;
+	Ht(0, 1) = 0.;
+	Ht(1, 1) = 0.;
+	Ht(2, 1) = Z;
+	Ht(0, 2) = x1-pl;
+	Ht(1, 2) = y1;
 	Ht(2, 2) = 0.;
 
 	TVector3 bn(b);
@@ -153,7 +157,16 @@ NeutrinoSolver::NeutrinoSolver(const TLorentzVector* lep, const TLorentzVector* 
 	TMatrixD R2(RotationY(-1.*w2));
 	TMatrixD R3(RotationX(w3));
 
-	H=R1*R2*R3*Ht;
+	TMatrixD RR(R1*R2*R3);
+
+	H_=R1*R2*R3*Ht;
+
+
+	Hp_=H_;
+	Hp_(2, 0) = 0.;
+	Hp_(2, 1) = 0.;
+	Hp_(2, 2) = 1.;
+
 }
 
 void NeutrinoSolver::Solve(double t)
@@ -162,11 +175,16 @@ void NeutrinoSolver::Solve(double t)
 	T(1, 0) = Sin(t);
 	T(2, 0) = 1.;
 
-	T = H*T;
+	T = H_*T;
 }
 
 TLorentzVector NeutrinoSolver::GetSolution(double t)
 {
+	if (ERROR==true)
+	{
+		//cout<<"NS ERROR IM "<<IM_<<endl;
+		return(TLorentzVector(0.,0.,0.,0.));
+	}
 	Solve(t);
 	return TLorentzVector(T(0,0), T(1,0), T(2,0), Sqrt(T(0,0)*T(0,0) + T(1,0)*T(1,0) + T(2,0)*T(2,0) + Mn*Mn));
 }
@@ -187,6 +205,7 @@ double NeutrinoSolver::Chi2(double t)
 	return(((MET-SOL).T()*VM*(MET-SOL))(0,0));
 }
 
+
 pair<double, double> NeutrinoSolver::Extrem(double t, bool MIN)
 {
 	double sign = -1.;
@@ -203,7 +222,7 @@ pair<double, double> NeutrinoSolver::Extrem(double t, bool MIN)
 			t = t + step;
 			old = n;
 			right = true;
-		}	
+		}
 		else
 		{
 			if(right)
@@ -220,6 +239,20 @@ pair<double, double> NeutrinoSolver::Extrem(double t, bool MIN)
 	return pair<double, double>(t, old);
 }
 
+void NeutrinoSolver::SetMET(double metx, double mety, double metxerr, double metyerr, double metxyrho)
+{
+	MET(0,0) = metx;
+	MET(1,0) = mety;
+
+	VM(0,0) = metxerr*metxerr;
+	VM(1,1) = metyerr*metyerr;
+	VM(1,0) = metxerr*metyerr*metxyrho;
+	VM(0,1) = metxerr*metyerr*metxyrho;
+
+	VM.Invert();
+}
+
+
 TLorentzVector NeutrinoSolver::GetBest(double metx, double mety, double metxerr, double metyerr, double metxyrho, double& test, bool INFO)
 {
 	if(ERROR){ test = -1; return(TLorentzVector(0.,0.,0.,0.));}
@@ -231,7 +264,7 @@ TLorentzVector NeutrinoSolver::GetBest(double metx, double mety, double metxerr,
 	VM(1,1) = metyerr*metyerr;
 	VM(1,0) = metxerr*metyerr*metxyrho;
 	VM(0,1) = metxerr*metyerr*metxyrho;
-		
+
 	VM.Invert();
 
 	if(INFO)
@@ -252,12 +285,12 @@ TLorentzVector NeutrinoSolver::GetBest(double metx, double mety, double metxerr,
 	if(minimuma.second > minimumb.second)
 	{
 		test = minimumb.second;
-		return(GetSolution(minimumb.first));	
+		return(GetSolution(minimumb.first));
 	}
 	else
 	{
 		test = minimuma.second;
-		return(GetSolution(minimuma.first));	
+		return(GetSolution(minimuma.first));
 	}
 
 
@@ -284,7 +317,7 @@ TLorentzVector NeutrinoSolver::GetBest(double metx, double mety, double metxerr,
 //			t = t + step;
 //			old = n;
 //			right = true;
-//		}	
+//		}
 //		else
 //		{
 //			if(right)
@@ -311,5 +344,5 @@ TLorentzVector NeutrinoSolver::GetBest(double metx, double mety, double metxerr,
 //
 //	test = old;
 //
-//	return(GetSolution(t));	
+//	return(GetSolution(t));
 }

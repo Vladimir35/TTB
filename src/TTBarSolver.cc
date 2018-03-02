@@ -4,7 +4,7 @@
 #include "IDJet.h"
 
 
-TTBarSolver* TTBarSolver::TTBS = 0; 
+TTBarSolver* TTBarSolver::TTBS = 0;
 
 void myfuncln(Int_t& npar, Double_t* deriv, Double_t& val, Double_t* par, Int_t flag)
 {
@@ -58,7 +58,7 @@ void TTBarSolver::Init(bool pseudo, string filename, bool usebtag, bool usens, b
 		c_rw = 5.444E-3;
 		c_rwt = -2.1583E-3;
 	}
-	norm = -1.* Log(Sqrt(c_rw*c_rt - c_rwt*c_rwt)/Pi()); 
+	norm = -1.* Log(Sqrt(c_rw*c_rt - c_rwt*c_rwt)/Pi());
 	masstestmax = norm + c_mw*c_mw*c_rw + 2.*c_mw*c_mt*c_rwt + c_mt*c_mt*c_rt;
 	dir->cd();
 }
@@ -77,7 +77,7 @@ void TTBarSolver::Solve(TLorentzVector* bhad, TLorentzVector* j1had, TLorentzVec
 	uj2had_ = 0.1;
 	ublep_ = 0.1;
 	ullep_ = 0.01;
-	umetx_ = 0.2;//met->pxunctot(); 
+	umetx_ = 0.2;//met->pxunctot();
 	umety_ = 0.2;//met->pyunctot();
 	//umety_ = 0.05*met->Py();//Sqrt(met_->pyUnc());
 	//umetx_ = 25;//Sqrt(met_->pxUnc());
@@ -94,7 +94,7 @@ void TTBarSolver::Solve(TLorentzVector* bhad, TLorentzVector* j1had, TLorentzVec
 	//btagtest -= Log(BTag_right->Interpolate(blep_->csvIncl())/BTag_wrong->Interpolate(blep_->csvIncl()));
 	//btagtest -= Log(BTag_wrong->Interpolate(j1had_->csvIncl())/BTag_right->Interpolate(j1had_->csvIncl()));
 	//btagtest -= Log(BTag_wrong->Interpolate(j2had_->csvIncl())/BTag_right->Interpolate(j2had_->csvIncl()));
-	
+
 	//minuit.mnparm(9, "metz", neutrino.Pz(), 1., 0., 10000., flags);
 	//minuit.mnparm(10, "wn mass", 80., 1., 10, 1000, flags);
 	//if(!LEPMASS)
@@ -167,9 +167,15 @@ double TTBarSolver::Test(double* par)
 	j2hadT_ = TLorentzVector(j2had_->Px()*par[4], j2had_->Py()*par[4], j2had_->Pz()*par[4], j2had_->E()*par[4]);
 	blepT_ = TLorentzVector(blep_->Px()*par[5], blep_->Py()*par[5], blep_->Pz()*par[5], blep_->E()*par[5]);
 	llepT_ = TLorentzVector(llep_->Px()*par[6], llep_->Py()*par[6], llep_->Pz()*par[6], llep_->E()*par[6]);
-	NeutrinoSolver NS(&llepT_, &blepT_, par[1], par[0]);
+	NeutrinoSolver NS;
+	NS.Build(&llepT_, &blepT_, par[1], par[0]);
 	//metT_ = TLorentzVector(NS.GetBest(met_->Px()*par[7], met_->Py()*par[8], umetx_, umety_, rhomet_, nschi));
 	metT_ = TLorentzVector(NS.GetBest(met_->Px()*par[7], met_->Py()*par[8], 1., 1., 0., nschi));
+	// //Evan trying to do something
+	// if (metT_[0]==0)
+	// {
+	// 	cout<<"NSFAIL IM "<<NS.IM()<<endl;
+	// }
 	//cout << nschi << " NS " << metT_.E() << " " << metT_.Pt() << endl;
 	if(nschi > 0. && nschi < 150.*150.)
 	{
@@ -178,8 +184,8 @@ double TTBarSolver::Test(double* par)
 
 	double mwhad = (j1hadT_ + j2hadT_).M();
 	double mthad = (j1hadT_ + j2hadT_ + bhadT_).M();
-	//cout << mwhad << " M " << mthad << endl; 
-	
+	//cout << mwhad << " M " << mthad << endl;
+
 
 	if(false)
 	{
@@ -214,4 +220,3 @@ double TTBarSolver::Test(double* par)
 	//cout << res << " " << par[2]-1 << " " << par[3]-1 <<endl;
 	return(res);
 }
-
