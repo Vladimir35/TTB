@@ -210,7 +210,7 @@ class Dilepton
 
 //leftovers from Permutation class
 
-		bool IsComplete() const {return(lt_ != 0 && ltbar_ != 0 && bt_ != 0 && btbar_ != 0 && (met_->E() != 0 || nut_->E() + nutbar_->E() > -0.5)&& bt_ != btbar_);}
+		bool IsComplete() const {return(nut_!=0 && nutbar_ != 0);}
 		int NumBJets() const {return((bt_ != 0 ? 1 : 0) + (btbar_ != 0 ? 1 : 0));}
 		int IsJetIn(const TLorentzVector* jet) const
 		{

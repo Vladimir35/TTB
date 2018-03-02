@@ -355,60 +355,37 @@ void Dilepton::AverageNeutrinos()
 
 void Dilepton::SortSolutions(Dilepton gendi)
 {
-
+	if (nut_solns_.size()<2) {
+		return;
+	}
 	TLorentzVector* tru_nut = gendi.Nut();
 	TLorentzVector* tru_nutbar = gendi.Nutbar();
 
-	int besti = 0;
-	double bestDP = 10000000.;
 
-	for (size_t i = 0; i < nut_solns_.size(); i++) {
-		double currentDP = deltaP(nut_solns_[i] , *tru_nut) + deltaP(nutbar_solns_[i] , *tru_nutbar);
-		if (currentDP < bestDP) {
-			bestDP = currentDP;
-			besti = i;
-		}
+
+	std::vector<size_t> inds;
+	for (size_t i = 0; i < nut_solns_.size(); ++i)
+	{
+		inds.push_back(i);
 	}
 
-	if (besti!=0) {
-		nut_solns_[0] = nut_solns_[besti];
-		nutbar_solns_[0] = nutbar_solns_[besti];
+	//have to do this for some reason
+	const TLorentzVector* correct_nut = gendi.Nut();
+	const TLorentzVector* correct_nutbar = gendi.Nutbar();
+
+	std::sort(inds.begin(), inds.end(),
+	[=](size_t& i1,  size_t& i2) {
+	return deltaP(nut_solns_[i1],  *correct_nut) + deltaP(nutbar_solns_[i1] , *correct_nutbar)
+		< deltaP(nut_solns_[i2],  *correct_nut) + deltaP(nutbar_solns_[i2] , *correct_nutbar);});
+
+	vector<TLorentzVector> sorted_nuts;
+	vector<TLorentzVector> sorted_nutbars;
+	for (size_t i =0; i<nut_solns_.size() ; i++) {
+		sorted_nuts.push_back(nut_solns_[inds[i]]);
+		sorted_nutbars.push_back(nutbar_solns_[inds[i]]);
+		nut_solns_ = sorted_nuts;
+		nutbar_solns_ = sorted_nutbars;
 	}
-
-
-
-
-
-	//old shit
-
-	// std::vector<size_t> inds;
-	// for (size_t i = 0; i < nut_solns_.size(); ++i)
-	// {
-	// 	inds.push_back(i);
-	// }
-	// for (size_t i = 0; i < nut_solns_.size(); ++i)
-	// {
-	// 	inds.push_back(i);
-	// }
-   //
-	// //have to do this for some reason
-	// const TLorentzVector* correct_nut = gendi.Nut();
-	// const TLorentzVector* correct_nutbar = gendi.Nutbar();
-   //
-	// std::sort(inds.begin(), inds.end(),
-	// [=](size_t& i1,  size_t& i2) {
-	// return deltaP(nut_solns_[i1],  *correct_nut) + deltaP(nutbar_solns_[i1] , *correct_nutbar)
-	// 	< deltaP(nut_solns_[i2],  *correct_nut) + deltaP(nutbar_solns_[i2] , *correct_nutbar);});
-   //
-	// vector<TLorentzVector> sorted_nuts;
-	// vector<TLorentzVector> sorted_nutbars;
-	// for (size_t i : inds) {
-	// 	sorted_nuts.push_back(nut_solns_[i]);
-	// 	cout<<"{"<<i<<"}";
-	// 	sorted_nutbars.push_back(nutbar_solns_[i]);
-	// 	nut_solns_ = sorted_nuts;
-	// 	nutbar_solns_ = sorted_nutbars;
-	// }
 }
 
 void Dilepton::SortSolutionsPt()
